@@ -10,8 +10,6 @@ The grounding pipeline has three stages, run on a single screenshot:
 2. **Template matching across detected crops.** Each candidate is cropped (with padding for the label text below) and scored against vendored Notepad icon templates using a shape + color score. This filters out non-Notepad icons that GroundingDINO also picked up (Recycle Bin, This PC, etc.).
 3. **OCR tiebreak.** When more than one detection passes the template threshold, EasyOCR reads the label below each candidate and picks the one whose text is closest to `"Notepad"`. OCR is skipped entirely when only one detection passes — usually the case — so the model loads only when it would change the answer.
 
-If no detection passes the template threshold, grounding returns "no match" rather than the highest-scoring fallback. The retry loop in `main.py` then restarts from `Win+D`. After 3 failed attempts on the same post, it raises.
-
 
 ## Setup
 
