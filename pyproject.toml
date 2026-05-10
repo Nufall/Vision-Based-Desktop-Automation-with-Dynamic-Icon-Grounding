@@ -1,0 +1,67 @@
+[project]
+name = "tjm-desktop-automation"
+version = "0.1.0"
+description = "Vision-based desktop automation: ground Notepad icon with GroundingDINO, drive UI with pyautogui."
+requires-python = ">=3.9,<3.10"
+dependencies = [
+    # CUDA 11.3 build of PyTorch — see [tool.uv.sources] below.
+    # Same versions installed in the original `dino` conda env.
+    "torch==1.10.1+cu113",
+    "torchvision==0.11.2+cu113",
+
+    # torch 1.10's torch_version.py does `from pkg_resources import packaging`.
+    # setuptools 70+ removed that vendored re-export, so pin to the last line
+    # that still exposes it.
+    "setuptools>=65,<70",
+
+    # Core ML / vision stack used by GroundingDINO + helpers
+    "numpy>=1.26,<2.0",
+    # Headless only — installing both `opencv-python` and `opencv-python-headless`
+    # leaves them clobbering the same cv2/ namespace and gapi import dies.
+    # easyocr 1.6 pins headless<4.6 transitively, so we let that constraint win.
+    "opencv-python-headless",
+    # easyocr 1.6.2 still references Image.ANTIALIAS, removed in Pillow 10.
+    "Pillow>=9.5,<10",
+    "supervision>=0.28,<1.0",
+    # Newer transformers (4.45+) require torch >= 2.1 and refuse to load on 1.10.
+    # 4.30.x is what the original dino env used and it works with torch 1.10.
+    "transformers>=4.30,<4.40",
+    "timm>=1.0",
+    "addict>=2.4",
+    "yapf>=0.43",
+    "pycocotools>=2.0",
+    "matplotlib>=3.9",
+    "termcolor>=2.4",
+    "pyyaml>=5.4",
+
+    # OCR (template tiebreak)
+    # easyocr 1.7+ calls torch.load(weights_only=...) which doesn't exist on
+    # torch 1.10. 1.6.x is what dino used and it loads cleanly on torch 1.10.
+    "easyocr>=1.6,<1.7",
+
+    # Posts API client
+    "requests>=2.32",
+
+    # Desktop automation (Windows)
+    "pyautogui>=0.9.54",
+    "pygetwindow>=0.0.9",
+    "pyperclip>=1.11",
+]
+
+# Treat this directory as an application, not a buildable package.
+# `groundingdino/` and `helpers/` are vendored sub-packages that are
+# imported directly from the project root — uv just needs to provision
+# the venv and install third-party deps.
+[tool.uv]
+package = false
+
+# Pull torch + torchvision from the official CUDA 11.3 wheel index.
+# Everything else still resolves through PyPI.
+[tool.uv.sources]
+torch = { index = "pytorch-cu113" }
+torchvision = { index = "pytorch-cu113" }
+
+[[tool.uv.index]]
+name = "pytorch-cu113"
+url = "https://download.pytorch.org/whl/cu113"
+explicit = true
